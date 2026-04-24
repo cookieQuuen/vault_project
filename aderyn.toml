@@ -11,14 +11,15 @@ version = 1
 # Most of the time, you want to point it to the directory containing foundry.toml or hardhat.config.js/ts.
 root = "contracts"
 
-# Path of source directory containing the contracts, relative to root (above)
-# Aderyn will traverse all the nested files inside to scan and report vulnerabilities.
-# - If not specified, Aderyn will try to extract it from the framework that is being used. (Foundry / Hardhat).
-#   That would be "contracts/" in case of Hardhat and "src/" in case of Foundry. Also, sometimes it is automatically
-#   derived from foundry.toml and other factors like FOUNDRY_PROFILE environment variable.
-# - If specified, Aderyn will override the above configuration.
-# Example:
-# src = "src/"
+
+# Explicitly set the source directory for contracts
+src = "contracts/"
+
+# Optionally, include only Vault contracts (uncomment to use)
+# include = ["VaultV1.sol", "VaultV2.sol"]
+
+# Optionally, exclude test contracts or interfaces (uncomment to use)
+# exclude = ["/test/", "/interfaces/"]
 
 # Path segments of contract files to include in the analysis.
 # - It can be a partial match like "/interfaces/", which will include all files with "/interfaces/" in the file path.

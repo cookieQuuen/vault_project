@@ -15,9 +15,9 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     environment:
-      - VITE_CHAIN_ID=${VITE_CHAIN_ID:-11155111}
-      - VITE_VAULT_ADDRESS=${VITE_VAULT_ADDRESS:-0x2af4ea8EC881736642060bEDD3B6Eaf0Cf874E1B}
-      - VITE_RPC_URL=${VITE_RPC_URL:-https://sepolia.gateway.tenderly.com}
+      - VITE_CHAIN_ID=11155111
+      - VITE_VAULT_ADDRESS=0x2af4ea8EC881736642060bEDD3B6Eaf0Cf874E1B
+      - VITE_RPC_URL=https://ethereum-sepolia-rpc.publicnode.com
     ports:
       - "5173:5173"
     depends_on:
@@ -30,8 +30,8 @@ services:
       context: ./monitoring/exporter
       dockerfile: Dockerfile
     environment:
-      - RPC_URL=${RPC_URL:-http://anvil:8545}
-      - VAULT_ADDRESS=${VITE_VAULT_ADDRESS:-0x2af4ea8EC881736642060bEDD3B6Eaf0Cf874E1B}
+      - RPC_URL=https://ethereum-sepolia-rpc.publicnode.com
+      - VAULT_ADDRESS=0x2af4ea8EC881736642060bEDD3B6Eaf0Cf874E1B
     ports:
       - "9464:9464"
     depends_on:

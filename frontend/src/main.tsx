@@ -22,30 +22,9 @@ import { vaultAbi } from "./abi/vaultAbi";
 import "./styles.css";
 
 const vaultAddress = (import.meta.env.VITE_VAULT_ADDRESS || "0x0000000000000000000000000000000000000000") as `0x${string}`;
-const chainId = Number(import.meta.env.VITE_CHAIN_ID || "11155111");
-const defaultRpcUrl = chainId === 31337 ? "http://localhost:8545" : "https://ethereum-sepolia-rpc.publicnode.com";
-const rpcUrl = import.meta.env.VITE_RPC_URL || defaultRpcUrl;
-
-const anvilChain = {
-  id: 31337,
-  name: "Anvil",
-  network: "anvil",
-  nativeCurrency: {
-    name: "Ether",
-    symbol: "ETH",
-    decimals: 18
-  },
-  rpcUrls: {
-    default: {
-      http: [rpcUrl]
-    },
-    public: {
-      http: [rpcUrl]
-    }
-  }
-};
-
-const selectedChain = chainId === 31337 ? anvilChain : sepolia;
+const chainId = 11155111; // Sepolia chain ID
+const rpcUrl = "https://ethereum-sepolia-rpc.publicnode.com";
+const selectedChain = sepolia;
 
 const { chains, publicClient, webSocketPublicClient } = configureChains([selectedChain], [
   jsonRpcProvider({
@@ -65,7 +44,9 @@ const wagmiConfig = createConfig({
 const queryClient = new QueryClient();
 
 function Dashboard() {
-  const [amount, setAmount] = React.useState("0.05");
+    // Diagnostics for debugging
+    const [showDiagnostics, setShowDiagnostics] = React.useState(false);
+  const [amount, setAmount] = React.useState("0.005");
   const [isOnline, setIsOnline] = React.useState<boolean>(navigator.onLine);
   const [hasInjectedWallet, setHasInjectedWallet] = React.useState<boolean>(false);
   const { address, isConnected } = useAccount();
@@ -124,7 +105,18 @@ function Dashboard() {
   });
 
   const txReceipt = useWaitForTransaction({
-    hash: depositWrite.data?.hash
+    hash: depositWrite.data?.hash,
+    // Increase polling interval to 2 seconds (default is 500ms)
+    pollInterval: 2000,
+    // Retry up to 10 times with exponential backoff if transaction is not found
+    retry: (failureCount, error) => {
+      // Only retry TransactionNotFoundError
+      return (
+        error?.name === "TransactionNotFoundError" &&
+        failureCount < 10
+      );
+    },
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 10000), // exponential backoff, max 10s
   });
 
   const isPending = depositWrite.isLoading || txReceipt.isLoading;
@@ -155,6 +147,23 @@ function Dashboard() {
       <div className="card">
         <h1>ETH Deposit Vault</h1>
         <p className="subtitle">UUPS upgradeable vault dashboard with live on-chain reads.</p>
+
+        <button className="secondary" style={{ float: 'right', marginBottom: 8 }} onClick={() => setShowDiagnostics(v => !v)}>
+          {showDiagnostics ? 'Hide Diagnostics' : 'Show Diagnostics'}
+        </button>
+
+        {showDiagnostics && (
+          <div style={{ background: '#222', color: '#fff', padding: 10, borderRadius: 6, marginBottom: 12, fontSize: 13 }}>
+            <div><strong>Diagnostics (Sepolia Only)</strong></div>
+            <div>Network: Sepolia (ID: 11155111)</div>
+            <div>Vault Address: {vaultAddress}</div>
+            <div>RPC URL: https://ethereum-sepolia-rpc.publicnode.com</div>
+            <div>Deposit Tx Hash: {depositWrite.data?.hash || '-'}</div>
+            <div>Tx Receipt Status: {txReceipt.status}</div>
+            <div>Tx Receipt Error: {txReceipt.error?.name || '-'}</div>
+            <div>Tx Receipt Error Message: {txReceipt.error?.message || '-'}</div>
+          </div>
+        )}
 
         {!isOnline && <p className="err">You are offline. Reconnect internet to query Sepolia RPC.</p>}
         {!hasVaultAddress && <p className="err">Set VITE_VAULT_ADDRESS in your frontend .env file.</p>}
@@ -221,7 +230,16 @@ function Dashboard() {
             {isDepositDisabled && <p className="err">Deposit disabled: {depositDisabledReason}</p>}
 
             {success && <p className="ok">Deposit confirmed on-chain.</p>}
-            {hasError && <p className="err">Transaction failed. Check wallet/network and retry.</p>}
+            {hasError && (
+              <p className="err">
+                Transaction failed. Check wallet/network and retry.<br />
+                {txReceipt.error?.name === 'TransactionNotFoundError' && (
+                  <>
+                    <span style={{ color: '#ffb347' }}>Transaction not found. Ensure you are on the correct network and RPC. See diagnostics above.</span>
+                  </>
+                )}
+              </p>
+            )}
           </>
         )}
       </div>
