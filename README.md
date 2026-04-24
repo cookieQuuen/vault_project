@@ -37,7 +37,8 @@ Report file: `contracts/aderyn_report.md`
 
 Run Aderyn (if installed):
 ```bash
-aderyn contracts/contracts/VaultV1.sol --output contracts/aderyn_report.md
+cd ~/block-chain/exam_brock/contracts
+aderyn . -o aderyn_report.md
 ```
 
 Fixed findings documented in the report:

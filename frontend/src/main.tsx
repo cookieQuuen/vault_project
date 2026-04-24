@@ -44,6 +44,18 @@ const wagmiConfig = createConfig({
 const queryClient = new QueryClient();
 
 function Dashboard() {
+      // Withdraw and claim contract writes
+      const withdrawWrite = useContractWrite({
+        address: vaultAddress,
+        abi: vaultAbi,
+        functionName: "withdraw"
+      });
+
+      const claimWrite = useContractWrite({
+        address: vaultAddress,
+        abi: vaultAbi,
+        functionName: "claimRewards"
+      });
     // Diagnostics for debugging
     const [showDiagnostics, setShowDiagnostics] = React.useState(false);
   const [amount, setAmount] = React.useState("0.005");
@@ -123,8 +135,10 @@ function Dashboard() {
   const success = txReceipt.isSuccess;
   const hasError = depositWrite.isError || txReceipt.isError;
 
-  const principal = principalRead.data ? Number(formatEther(principalRead.data as bigint)).toFixed(6) : "0.000000";
-  const rewards = rewardRead.data ? Number(formatEther(rewardRead.data as bigint)).toFixed(6) : "0.000000";
+  const principalRaw = principalRead.data ? BigInt(principalRead.data as bigint) : 0n;
+  const rewardsRaw = rewardRead.data ? BigInt(rewardRead.data as bigint) : 0n;
+  const principal = Number(formatEther(principalRaw)).toFixed(6);
+  const rewards = Number(formatEther(rewardsRaw)).toFixed(6);
 
   const amountValue = Number(amount);
   let depositDisabledReason = "";
@@ -215,6 +229,7 @@ function Dashboard() {
             <label htmlFor="amount">Deposit Amount (ETH)</label>
             <input id="amount" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.10" />
 
+
             <div className="stack">
               <button
                 onClick={() => depositWrite.write?.()}
@@ -222,6 +237,31 @@ function Dashboard() {
               >
                 {isPending ? "Pending..." : "Deposit"}
               </button>
+              {principalRaw > 0n && (
+                <button
+                  onClick={() => {
+                    const amt = prompt("Withdraw how much ETH?", principal);
+                    if (!amt) return;
+                    try {
+                      const amtWei = parseEther(amt);
+                      withdrawWrite.write?.({ args: [amtWei] });
+                    } catch {
+                      alert("Invalid amount");
+                    }
+                  }}
+                  disabled={withdrawWrite.isLoading}
+                >
+                  {withdrawWrite.isLoading ? "Withdrawing..." : "Withdraw"}
+                </button>
+              )}
+              {rewardsRaw > 0n && (
+                <button
+                  onClick={() => claimWrite.write?.()}
+                  disabled={claimWrite.isLoading}
+                >
+                  {claimWrite.isLoading ? "Claiming..." : "Claim Rewards"}
+                </button>
+              )}
               <button className="secondary" onClick={() => disconnect()}>
                 Disconnect
               </button>
