@@ -16,7 +16,7 @@ services:
       dockerfile: Dockerfile
     environment:
       - VITE_CHAIN_ID=11155111
-      - VITE_VAULT_ADDRESS=0x2af4ea8EC881736642060bEDD3B6Eaf0Cf874E1B
+      - VITE_VAULT_ADDRESS=0x3A2056a79307d82b25c83eFbdc16C2218DE23E68
       - VITE_RPC_URL=https://ethereum-sepolia-rpc.publicnode.com
     ports:
       - "5173:5173"
@@ -31,7 +31,7 @@ services:
       dockerfile: Dockerfile
     environment:
       - RPC_URL=https://ethereum-sepolia-rpc.publicnode.com
-      - VAULT_ADDRESS=0x2af4ea8EC881736642060bEDD3B6Eaf0Cf874E1B
+      - VAULT_ADDRESS=0x3A2056a79307d82b25c83eFbdc16C2218DE23E68
     ports:
       - "9464:9464"
     depends_on:

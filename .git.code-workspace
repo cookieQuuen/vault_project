@@ -1,0 +1,16 @@
+{
+	"folders": [
+		{
+			"path": ".git"
+		},
+		{
+			"path": "contracts"
+		},
+		{
+			"path": "frontend"
+		},
+		{
+			"path": "monitoring"
+		}
+	]
+}
